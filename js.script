@@ -1,0 +1,132 @@
+const express = require("express");
+
+const app = express();
+const PORT = 3000;
+
+// Import Routes
+const userRoutes = require("./routes/users");
+
+// Middleware
+app.use(express.json());
+
+// Home Route
+app.get("/", (req, res) => {
+    res.json({
+        message: "Welcome to DecodeLabs Project 2 Backend API",
+        status: "Server Running Successfully"
+    });
+});
+
+// User Routes
+app.use("/users", userRoutes);
+
+// 404 Route
+app.use((req, res) => {
+    res.status(404).json({
+        success: false,
+        message: "Route Not Found"
+    });
+});
+
+// Start Server
+app.listen(PORT, () => {
+    console.log(`Server is running on http://localhost:${PORT}`);
+});
+const express = require("express");
+const router = express.Router();
+
+const {
+    getUsers,
+    getUserById,
+    addUser
+} = require("../controllers/userController");
+
+// GET All Users
+router.get("/", getUsers);
+
+// GET User By ID
+router.get("/:id", getUserById);
+
+// POST Add User
+router.post("/", addUser);
+
+module.exports = router;
+const users = require("../data/users.json");
+
+// GET All Users
+const getUsers = (req, res) => {
+    res.status(200).json({
+        success: true,
+        totalUsers: users.length,
+        data: users
+    });
+};
+
+// GET User By ID
+const getUserById = (req, res) => {
+    const id = parseInt(req.params.id);
+
+    const user = users.find(u => u.id === id);
+
+    if (!user) {
+        return res.status(404).json({
+            success: false,
+            message: "User not found"
+        });
+    }
+
+    res.status(200).json({
+        success: true,
+        data: user
+    });
+};
+
+// POST Add User
+const addUser = (req, res) => {
+
+    const { name, email } = req.body;
+
+    // Validation
+    if (!name || name.trim() === "") {
+        return res.status(400).json({
+            success: false,
+            message: "Name is required"
+        });
+    }
+
+    if (!email || email.trim() === "") {
+        return res.status(400).json({
+            success: false,
+            message: "Email is required"
+        });
+    }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+    if (!emailRegex.test(email)) {
+        return res.status(400).json({
+            success: false,
+            message: "Invalid email format"
+        });
+    }
+
+    const newUser = {
+        id: users.length + 1,
+        name,
+        email
+    };
+
+    users.push(newUser);
+
+    res.status(201).json({
+        success: true,
+        message: "User added successfully",
+        data: newUser
+    });
+};
+
+module.exports = {
+    getUsers,
+    getUserById,
+    addUser
+};
